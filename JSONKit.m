@@ -747,7 +747,7 @@ static void _JKArrayRemoveObjectAtIndex(JKArray *array, NSUInteger objectIndex) 
 {
   if(anObject    == NULL)                           { [NSException raise:NSInvalidArgumentException format:@"*** -[%@ %@]: attempt to insert nil", NSStringFromClass([self class]), NSStringFromSelector(_cmd)]; }
   if(objectIndex >  _JKArrayCount((JKArray *)self)) { [NSException raise:NSRangeException format:@"*** -[%@ %@]: index (%lu) beyond bounds (%lu)", NSStringFromClass([self class]), NSStringFromSelector(_cmd), objectIndex, _JKArrayCount((JKArray *)self) + 1UL]; }
-  anObject = [anObject retain];
+  [anObject retain];
   _JKArrayInsertObjectAtIndex((JKArray *)self, anObject, objectIndex);
   _JKArrayIncrementMutations((JKArray *)self);
 }
@@ -777,7 +777,7 @@ static void _JKArrayRemoveObjectAtIndex(JKArray *array, NSUInteger objectIndex) 
 {
   if(anObject    == NULL)                           { [NSException raise:NSInvalidArgumentException format:@"*** -[%@ %@]: attempt to insert nil", NSStringFromClass([self class]), NSStringFromSelector(_cmd)]; }
   if(objectIndex >= _JKArrayCount((JKArray *)self)) { [NSException raise:NSRangeException format:@"*** -[%@ %@]: index (%lu) beyond bounds (%lu)", NSStringFromClass([self class]), NSStringFromSelector(_cmd), objectIndex, _JKArrayCount((JKArray *)self)]; }
-  anObject = [anObject retain];
+  [anObject retain];
   _JKArrayReplaceObjectAtIndexWithObject((JKArray *)self, objectIndex, anObject);
   _JKArrayIncrementMutations((JKArray *)self);
 }
@@ -984,6 +984,8 @@ static void _JKDictionaryRemoveObjectWithEntry(JKDictionary *dictionary, JKHashT
 }
 
 static void _JKDictionaryAddObject(JKDictionary *dictionary, NSUInteger keyHash, id key, id object) {
+  CFRetain(key);
+  CFRetain(object);
   NSCParameterAssert((dictionary != NULL) && (key != NULL) && (object != NULL) && (dictionary->count < dictionary->capacity) && (dictionary->entry != NULL));
   NSUInteger keyEntry = keyHash % dictionary->capacity, idx = 0UL;
   for(idx = 0UL; idx < dictionary->capacity; idx++) {
@@ -1111,9 +1113,9 @@ static NSUInteger _JKDictionaryGetKeysAndObjects(JKDictionary *dictionary, NSUIn
   if(anObject == NULL) { [NSException raise:NSInvalidArgumentException format:@"*** -[%@ %@]: attempt to insert nil value (key: %@)", NSStringFromClass([self class]), NSStringFromSelector(_cmd), aKey]; }
   
   _JKDictionaryResizeIfNeccessary((JKDictionary *)self);
-  aKey     = [aKey     copy];
-  anObject = [anObject retain];
-  _JKDictionaryAddObject((JKDictionary *)self, CFHash(aKey), aKey, anObject);
+  id key = [aKey copy];
+  _JKDictionaryAddObject((JKDictionary *)self, CFHash(key), key, anObject);
+  [key release];
   _JKDictionaryIncrementMutations((JKDictionary *)self);
 }
 
