@@ -995,6 +995,8 @@ static void _JKDictionaryRemoveObjectWithEntry(JKDictionary *dictionary, JKHashT
 
 static void _JKDictionaryAddObject(JKDictionary *dictionary, NSUInteger keyHash, id key, id object) {
   NSCParameterAssert((dictionary != NULL) && (key != NULL) && (object != NULL) && (dictionary->count < dictionary->capacity) && (dictionary->entry != NULL));
+  CFRetain(key);
+  CFRetain(object);
   NSUInteger keyEntry = keyHash % dictionary->capacity, idx = 0UL;
   for(idx = 0UL; idx < dictionary->capacity; idx++) {
     NSUInteger entryIdx = (keyEntry + idx) % dictionary->capacity;
@@ -1071,11 +1073,9 @@ static JKHashTableEntry *_JKDictionaryHashTableEntryForKey(JKDictionary *diction
   if(anObject  == NULL) { [NSException raise:NSInvalidArgumentException       format:@"*** -[%@ %@]: attempt to insert nil value (key: %@)",    NSStringFromClass([self class]), NSStringFromSelector(_cmd), aKey]; }
   
   _JKDictionaryResizeIfNeccessary(self);
-#ifndef __clang_analyzer__
-  aKey     = [aKey     copy];   // Why on earth would clang complain that this -copy "might leak", 
-  anObject = [anObject retain]; // but this -retain doesn't!?
-#endif // __clang_analyzer__
-  _JKDictionaryAddObject(self, CFHash(aKey), aKey, anObject);
+  id key = [aKey copy];
+  _JKDictionaryAddObject((JKDictionary *)self, CFHash(key), key, anObject);
+  [key release];
   mutations = (mutations == NSUIntegerMax) ? 1UL : mutations + 1UL;
 }
 
